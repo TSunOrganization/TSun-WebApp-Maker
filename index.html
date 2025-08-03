@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSun AI Web App Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://img.icons8.com/3d-fluency/94/brain.png" type="image/png">
+    
+    <!-- Prism JS for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+
+    <!-- JS Beautify for Code Formatting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"></script>
+
+
+    <style>
+        :root {
+            --bg: #F0F2F5;
+            --surface: #E4E6EB;
+            --text-primary: #333;
+            --text-secondary: #606770;
+            --accent: #FFC107; 
+            --accent-dark: #FFA000;
+            --shadow-light: #FFFFFF;
+            --shadow-dark: #D1D9E6;
+            --code-bg: #282c34;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            display: grid;
+            grid-template-areas:
+                "header"
+                "main"
+                "preview";
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                grid-template-areas:
+                    "header header"
+                    "main preview";
+                grid-template-columns: 1fr 1.8fr;
+                grid-template-rows: auto 1fr;
+                height: calc(100vh - 4rem);
+            }
+        }
+        
+        .header {
+            grid-area: header;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        #changelog-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--bg);
+            border: none;
+            border-radius: 20px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+        }
+        #changelog-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .main-controls {
+            grid-area: main;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+            background: var(--bg);
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+        }
+
+        #prompt-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-family: 'Quicksand', sans-serif;
+            border-radius: 20px;
+            border: none;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            resize: vertical;
+            box-sizing: border-box;
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+        }
+        #prompt-input:focus {
+            outline: none;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #build-btn {
+            padding: 1rem 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background-color: var(--bg);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            width: 100%;
+            max-width: 300px;
+        }
+        #build-btn:hover {
+            color: var(--text-primary);
+        }
+        #build-btn:active {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            transform: scale(0.98);
+        }
+        #build-btn:disabled {
+            color: #aaa;
+            cursor: not-allowed;
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+        }
+        
+        #new-project-btn {
+            background: var(--accent);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            display: none; /* Hidden initially */
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+        }
+        #new-project-btn:hover {
+            background: var(--accent-dark);
+        }
+        #new-project-btn:active {
+             box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+        }
+
+
+        #ai-status {
+            min-height: 24px;
+            font-style: italic;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .app-preview-container {
+            grid-area: preview;
+            background-color: var(--bg);
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .app-preview-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            z-index: 100;
+        }
+
+        #app-preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 30px;
+        }
+        
+        .app-preview-container.fullscreen #app-preview-iframe {
+            border-radius: 0;
+        }
+
+        .initial-message-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .initial-message {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(240, 242, 245, 0.8);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 30px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--accent);
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- Preview Buttons --- */
+        .preview-controls {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 5;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .preview-btn {
+            background: var(--bg);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            display: flex; /* Always visible now */
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-btn:active {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+        }
+        .preview-btn svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-secondary);
+        }
+
+        /* --- Modal Styles --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 110;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #2d2d2d; /* Okaidia theme background */
+            color: #f8f8f2;
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #44475a;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        #close-modal-btn, #close-changelog-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .code-view {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden; /* Parent needs overflow hidden */
+        }
+        .code-view pre, .code-view textarea, .changelog-body {
+            margin: 0 !important;
+            padding: 1rem !important;
+            height: 100%;
+            box-sizing: border-box;
+            overflow: auto !important;
+            font-family: 'Fira Code', 'Courier New', monospace !important;
+            font-size: 0.9rem !important;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #2d2d2d !important;
+            color: #f8f8f2 !important;
+            border: none;
+            width: 100%;
+        }
+        .code-view textarea:focus {
+            outline: 2px solid var(--accent);
+        }
+        .modal-header .header-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .modal-header button {
+            background: #44475a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .changelog-entry {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #44475a;
+        }
+        .changelog-entry:last-child {
+            border-bottom: none;
+        }
+        .changelog-version {
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .changelog-meta {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+        .changelog-author {
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+        }
+        .changelog-author:hover {
+            transform: scale(1.1) rotate(-3deg);
+            text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-dark);
+            color: #fff;
+        }
+
+        /* Custom Scrollbar for Modals */
+        .modal-content ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .modal-content ::-webkit-scrollbar-track {
+            background: #21222c; /* A bit darker than the code bg */
+            border-radius: 10px;
+        }
+
+        .modal-content ::-webkit-scrollbar-thumb {
+            background-color: var(--accent);
+            border-radius: 10px;
+            border: 3px solid #21222c; /* Padding around thumb */
+        }
+
+        .modal-content ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--accent-dark);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-light);
+            width: 100%;
+            max-width: 1400px;
+        }
+        footer p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>TSun AI Web App Builder</h1>
+            <p>Your Idea, AI's Code, A Live Webapp!</p>
+            <button id="changelog-btn">📜 Changelog</button>
+        </header>
+
+        <main class="main-controls">
+            <div>
+                <label for="prompt-input" style="font-weight: 700; display: block; margin-bottom: 1rem;">What do you want to build?</label>
+                <textarea id="prompt-input" rows="5" placeholder="e.g., 'A user profile card with an image and a button' or 'Design a weather app layout'"></textarea>
+            </div>
+            <div class="button-container">
+                <button id="build-btn">✨ Build It!</button>
+                <button id="new-project-btn">➕ New Project</button>
+            </div>
+            <div id="ai-status"></div>
+        </main>
+
+        <section id="app-preview-container" class="app-preview-container">
+            <div class="preview-controls">
+                <button id="fullscreen-btn" class="preview-btn" title="Maximize">
+                    <svg id="maximize-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                    <svg id="minimize-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+                </button>
+                <button id="show-code-btn" class="preview-btn" title="Show Code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                </button>
+            </div>
+            <div class="initial-message-container">
+                <div class="initial-message">Your Live App Will Appear Here.</div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Code Modal -->
+    <div id="code-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generated Code</h3>
+                <div class="header-buttons">
+                    <button id="edit-code-btn">Edit</button>
+                    <button id="apply-changes-btn" style="display: none;">Apply Changes</button>
+                    <button id="copy-code-btn">Copy</button>
+                    <button id="close-modal-btn">&times;</button>
+                </div>
+            </div>
+            <div class="code-view">
+                <pre id="code-view-pre"><code class="language-html"></code></pre>
+                <textarea id="code-edit-textarea" style="display: none;"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div id="changelog-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Changelog</h3>
+                <button id="close-changelog-btn">&times;</button>
+            </div>
+            <div id="changelog-body" class="changelog-body">
+                <!-- Changelog entries will be injected here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made with 🫀 by ༯𝙎คAEED✘🫀</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const promptInput = document.getElementById('prompt-input');
+        const buildBtn = document.getElementById('build-btn');
+        const newProjectBtn = document.getElementById('new-project-btn');
+        const aiStatus = document.getElementById('ai-status');
+        const appPreviewContainer = document.getElementById('app-preview-container');
+        const showCodeBtn = document.getElementById('show-code-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const maximizeIcon = document.getElementById('maximize-icon');
+        const minimizeIcon = document.getElementById('minimize-icon');
+        const codeModal = document.getElementById('code-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+        const editCodeBtn = document.getElementById('edit-code-btn');
+        const applyChangesBtn = document.getElementById('apply-changes-btn');
+        const codeViewPre = document.getElementById('code-view-pre');
+        const codeViewCode = codeViewPre.querySelector('code');
+        const codeEditTextarea = document.getElementById('code-edit-textarea');
+        const changelogBtn = document.getElementById('changelog-btn');
+        const changelogModal = document.getElementById('changelog-modal');
+        const closeChangelogBtn = document.getElementById('close-changelog-btn');
+        const changelogBody = document.getElementById('changelog-body');
+        
+        // --- State ---
+        let isGenerating = false;
+        let isRefining = false;
+        let currentGeneratedCode = null;
+
+        // --- GEMINI API INTEGRATION ---
+        
+        async function callGeminiAPI(prompt, existingCode = null) {
+            showLoadingSpinner(true, "Thinking...");
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "fullHtml": { "type": "STRING", "description": "A single, complete HTML string with embedded CSS and JavaScript." }
+                },
+                required: ["fullHtml"]
+            };
+
+            let fullPrompt;
+            if (existingCode) {
+                 fullPrompt = `You are an expert web developer with a cute, fluffy, claymorphism design style. A user wants to refine an existing component. 
+                **IMPORTANT INSTRUCTIONS:**
+                1. **Modify Existing Code:** Take the user's existing complete HTML file and modify it based on their new request.
+                2. **Maintain Single File:** The final output MUST be a single, self-contained HTML file string with CSS in a <style> tag and JS in a <script> tag.
+                3. **Maintain Style:** Ensure the final code is complete, functional, and maintains the cute 'clay' aesthetic.
+                
+                **User Request:** "${prompt}"
+                **Existing HTML File:** \`\`\`html\n${existingCode}\n\`\`\`
+                
+                Now, return the complete, updated HTML file as a single string within a JSON object that adheres to the provided schema.`;
+            } else {
+                fullPrompt = `You are an expert web developer specializing in creating beautiful, functional, single-file web components with a cute, fluffy, claymorphism design style.
+                **IMPORTANT INSTRUCTIONS:**
+                1.  **Single HTML File:** You MUST generate a single, self-contained HTML file as a string. This file must include all necessary HTML for the body, all CSS within a \`<style>\` tag in the \`<head>\`, and all JavaScript within a \`<script>\` tag at the end of the \`<body>\`.
+                2.  **Claymorphism Style:** All CSS should follow a 'claymade' or 'neumorphic' aesthetic: soft shadows (e.g., \`box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff;\`), rounded corners (\`border-radius: 20px;\`), and a playful, tactile feel.
+                3.  **Self-Contained:** The code must be self-contained. Do not use external libraries. Use placeholders like https://placehold.co for images.
+                4.  **JSON Output:** Return your response as a single JSON object that strictly adheres to the provided schema: \`{ "fullHtml": "..." }\`.
+
+                **User Request:** "${prompt}"
+
+                Now, generate the code.`;
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: fullPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema,
+                    temperature: 0.4 
+                }
+            };
+            
+            try {
+                // This now calls our own serverless function, NOT Google's API directly
+                const response = await fetch(`/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.error("API Error Body:", errorBody);
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    return JSON.parse(text);
+                } else {
+                    console.error("Invalid response structure from API:", result);
+                    throw new Error("Invalid API response structure");
+                }
+
+            } catch (error) {
+                console.error("API Error:", error);
+                if (error.message.includes("401")) {
+                    aiStatus.textContent = "Authentication Error (401). Check Vercel Environment Variable.";
+                } else {
+                    aiStatus.textContent = "Something went wrong. Please try again.";
+                }
+                return null;
+            } finally {
+                showLoadingSpinner(false);
+            }
+        }
+        
+        // --- UI Functions ---
+        function showLoadingSpinner(show, message = '') {
+            let overlay = appPreviewContainer.querySelector('.loading-overlay');
+            if (show) {
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'loading-overlay';
+                    overlay.innerHTML = `<div class="spinner"></div><p>${message}</p>`;
+                    appPreviewContainer.appendChild(overlay);
+                } else {
+                    overlay.querySelector('p').textContent = message;
+                }
+            } else {
+                if (overlay) overlay.remove();
+            }
+        }
+        
+        function renderApp(fullHtml) {
+            currentGeneratedCode = fullHtml;
+            if (!fullHtml) {
+                appPreviewContainer.innerHTML = `<div class="initial-message-container"><div class="initial-message">AI failed to generate code. Please try again.</div></div>`;
+                return;
+            }
+            
+            const iframe = document.getElementById('app-preview-iframe') || document.createElement('iframe');
+            iframe.id = 'app-preview-iframe';
+            
+            const initialMessage = appPreviewContainer.querySelector('.initial-message-container');
+            if(initialMessage) initialMessage.remove();
+
+            if(!iframe.parentElement) {
+                 appPreviewContainer.appendChild(iframe);
+            }
+
+            iframe.srcdoc = fullHtml;
+        }
+
+
+        async function handleBuild() {
+            if (isGenerating) return;
+            const userPrompt = promptInput.value;
+            if (!userPrompt.trim()) {
+                aiStatus.textContent = "Please enter a prompt!";
+                return;
+            }
+            
+            isGenerating = true;
+            buildBtn.disabled = true;
+            
+            const generatedCode = await callGeminiAPI(userPrompt, isRefining ? currentGeneratedCode : null);
+            
+            if (generatedCode && generatedCode.fullHtml) {
+                aiStatus.textContent = 'Success! Rendering Preview...';
+                renderApp(generatedCode.fullHtml);
+                aiStatus.textContent = 'Your Webapp Is Ready!';
+                
+                isRefining = true;
+                buildBtn.innerHTML = '🔧 Refine App';
+                newProjectBtn.style.display = 'inline-block';
+                promptInput.placeholder = 'How can we improve this app?';
+                promptInput.value = '';
+
+            } else {
+                // Error message is already set by callGeminiAPI
+            }
+
+            setTimeout(() => {
+                aiStatus.textContent = '';
+                isGenerating = false;
+                buildBtn.disabled = false;
+            }, 4000);
+        }
+
+        function handleNewProject() {
+            isRefining = false;
+            currentGeneratedCode = null;
+            
+            promptInput.value = '';
+            promptInput.placeholder = "e.g., 'A user profile card with an image and a button''";
+            
+            buildBtn.innerHTML = '✨ Build It!';
+            newProjectBtn.style.display = 'none';
+            
+            const iframe = document.getElementById('app-preview-iframe');
+            if(iframe) iframe.remove();
+            
+            if(!appPreviewContainer.querySelector('.initial-message-container')) {
+                 const initialMessageContainer = document.createElement('div');
+                 initialMessageContainer.className = 'initial-message-container';
+                 initialMessageContainer.innerHTML = '<div class="initial-message">Your Live App Will Appear Here.</div>';
+                 appPreviewContainer.appendChild(initialMessageContainer);
+            }
+            
+            aiStatus.textContent = 'Ready for a new project!';
+            setTimeout(() => { aiStatus.textContent = ''; }, 2000);
+        }
+
+        function toggleFullscreen() {
+            const isFullscreen = appPreviewContainer.classList.toggle('fullscreen');
+            if (isFullscreen) {
+                fullscreenBtn.title = "Minimize";
+                maximizeIcon.style.display = 'none';
+                minimizeIcon.style.display = 'block';
+            } else {
+                fullscreenBtn.title = "Maximize";
+                maximizeIcon.style.display = 'block';
+                minimizeIcon.style.display = 'none';
+            }
+        }
+
+        // --- Modal Logic ---
+        const boilerplateHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Custom App</title>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #F0F2F5;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello, World!</h1>
+        <p>Start building your app here.</p>
+    </div>
+    <script>
+        // Your JavaScript goes here
+    <\/script>
+</body>
+</html>`;
+
+        function openCodeModal() {
+            exitEditMode(); // Ensure it opens in read-only mode
+            
+            const codeToShow = currentGeneratedCode || boilerplateHtml;
+
+            if (window.html_beautify) {
+                codeViewCode.textContent = html_beautify(codeToShow, {
+                    indent_size: 2,
+                    space_in_empty_paren: true
+                });
+            } else {
+                codeViewCode.textContent = codeToShow; // Fallback
+            }
+
+            if (window.Prism) {
+                Prism.highlightElement(codeViewCode);
+            }
+            codeModal.style.display = 'flex';
+        }
+
+        function closeCodeModal() {
+            codeModal.style.display = 'none';
+        }
+
+        function openChangelogModal() {
+            changelogModal.style.display = 'flex';
+        }
+
+        function closeChangelogModal() {
+            changelogModal.style.display = 'none';
+        }
+
+        function enterEditMode() {
+            codeViewPre.style.display = 'none';
+            codeEditTextarea.style.display = 'block';
+            const codeToEdit = currentGeneratedCode || boilerplateHtml;
+            codeEditTextarea.value = html_beautify(codeToEdit, { indent_size: 2, space_in_empty_paren: true });
+
+            editCodeBtn.style.display = 'none';
+            copyCodeBtn.style.display = 'none';
+            applyChangesBtn.style.display = 'inline-block';
+        }
+
+        function exitEditMode() {
+            codeViewPre.style.display = 'block';
+            codeEditTextarea.style.display = 'none';
+
+            editCodeBtn.style.display = 'inline-block';
+            copyCodeBtn.style.display = 'inline-block';
+            applyChangesBtn.style.display = 'none';
+        }
+        
+        function applyCodeChanges() {
+            const newCode = codeEditTextarea.value;
+            renderApp(newCode); // Update the main preview
+            exitEditMode();
+            
+            // Update the read-only view in the modal
+            codeViewCode.textContent = html_beautify(currentGeneratedCode, { indent_size: 2, space_in_empty_paren: true });
+            if (window.Prism) {
+                Prism.highlightElement(codeViewCode);
+            }
+
+            // Enter refinement mode if it was the first edit
+            if (!isRefining) {
+                isRefining = true;
+                buildBtn.innerHTML = '🔧 Refine App';
+                newProjectBtn.style.display = 'inline-block';
+                promptInput.placeholder = 'How can we improve this app?';
+            }
+        }
+
+        function copyActiveCode() {
+            const textToCopy = currentGeneratedCode;
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyCodeBtn.textContent = 'Copied!';
+            } catch (err) {
+                copyCodeBtn.textContent = 'Failed!';
+                console.error('Failed to copy: ', err);
+            }
+            document.body.removeChild(textArea);
+            setTimeout(() => { copyCodeBtn.textContent = 'Copy'; }, 2000);
+        }
+
+        // --- Changelog Data & Population ---
+        const changelogData = [
+            { version: 'v3.5', date: 'Aug 04, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Implemented a secure deployment strategy using Vercel Serverless Functions to protect the Gemini API key.' },
+            { version: 'v3.4', date: 'Aug 04, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Enabled the "Show Code" button from the start, allowing users to add their own custom HTML and initiate the refinement process.' },
+            { version: 'v3.3', date: 'Aug 03, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Redesigned the "Maximize" and "Show Code" buttons in the preview panel for a cleaner, more intuitive look.' },
+            { version: 'v3.2', date: 'Aug 03, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Added "Edit" and "Apply Changes" functionality to the code modal, allowing for manual code refinement.' },
+            { version: 'v3.1', date: 'Aug 03, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Added a code beautifier to format the HTML in the "Show Code" modal for better readability.' },
+            { version: 'v3.0', date: 'Aug 03, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Refactored to generate a single, self-contained HTML file to fix all JavaScript execution issues. This ensures 100% reliability of the generated app preview.' },
+            { version: 'v2.9', date: 'Aug 02, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Added a custom, beautifully styled scrollbar to the "Generated Code" and "Changelog" modals for a more polished look.' },
+            { version: 'v2.8', date: 'Aug 02, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Added boujee hover effects and micro-interactions to the author name in the changelog.' },
+            { version: 'v2.7', date: 'Aug 02, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Improved the "Show Code" modal with syntax highlighting and ensured proper scrollbar functionality for long code.' },
+            { version: 'v2.6', date: 'Aug 01, 2025', author: '༯𝙎ค૯𝙀𝘿✘🫀', changes: 'Switched to full English UI and added Changelog feature.' }
+        ];
+
+        function populateChangelog() {
+            changelogBody.innerHTML = '';
+            changelogData.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'changelog-entry';
+                entryDiv.innerHTML = `
+                    <div class="changelog-version">${entry.version}</div>
+                    <div class="changelog-meta">${entry.date} - by <span class="changelog-author">${entry.author}</span></div>
+                    <p>${entry.changes}</p>
+                `;
+                changelogBody.appendChild(entryDiv);
+            });
+        }
+
+        // --- Event Listeners ---
+        buildBtn.addEventListener('click', handleBuild);
+        newProjectBtn.addEventListener('click', handleNewProject);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleBuild();
+            }
+        });
+        showCodeBtn.addEventListener('click', openCodeModal);
+        closeModalBtn.addEventListener('click', closeCodeModal);
+        codeModal.addEventListener('click', (e) => {
+            if (e.target === codeModal) closeCodeModal();
+        });
+        copyCodeBtn.addEventListener('click', copyActiveCode);
+        editCodeBtn.addEventListener('click', enterEditMode);
+        applyChangesBtn.addEventListener('click', applyCodeChanges);
+
+        changelogBtn.addEventListener('click', openChangelogModal);
+        closeChangelogBtn.addEventListener('click', closeChangelogModal);
+        changelogModal.addEventListener('click', (e) => {
+            if (e.target === changelogModal) closeChangelogModal();
+        });
+
+        // --- Initial Load ---
+        populateChangelog();
+    });
+    </script>
+</body>
+</html>
